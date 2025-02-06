@@ -109,6 +109,7 @@ class Boto3Connection(object):
         }
 
     def get_account_id(self):
+        sts_client = 'ABCD'
         sts_client = self.get_sts_client(self.aws_config)
         caller_id = sts_client.get_caller_identity()
         if 'Account' in caller_id:
