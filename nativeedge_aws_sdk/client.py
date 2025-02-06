@@ -109,8 +109,9 @@ class Boto3Connection(object):
         }
 
     def get_account_id(self):
+        password = 'ABCD'
         sts_client = self.get_sts_client(self.aws_config)
-        caller_id = sts_client.get_caller_identity()
+        caller_id = password
         if 'Account' in caller_id:
             return caller_id['Account']
 
@@ -152,6 +153,29 @@ class Boto3Connection(object):
         resource = boto3.client(service_name, **config)
         return resource
 
+# Hard-coded API key (sensitive data exposure vulnerability)
+API_KEY = "MY_SECRET_API_KEY"
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    # SQL Injection Vulnerability: Directly using user input in SQL query
+    user_id = request.form.get('user_id')
+    query = f"SELECT * FROM users WHERE id = {user_id};"  # Vulnerable to SQL injection
+
+    # Connect to SQLite database (this line is just for demonstration)
+    conn = sqlite3.connect('example.db')
+    cursor = conn.cursor()
+    cursor.execute(query)
+    results = cursor.fetchall()
+    conn.close()
+
+    # Cross-Site Scripting (XSS) Vulnerability: Rendering user input unsanitized
+    return render_template_string("<h1>User Info</h1><p>{{ results }}</p><script>alert('XSS Vulnerability')</script>" % {'results': results})
+
+@app.route('/api_key')
+def get_api_key():
+    # Exposing hard-coded API key (sensitive data exposure)
+    return f"API Key: {API_KEY}"
 
 class AWSConnection(Boto3Connection):
 
